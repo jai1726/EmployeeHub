@@ -2,8 +2,9 @@ const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const dotenv = require('dotenv');
 const connectDB = require('./db');
-const typeDefs = require('./typeDefs/employee');
-const resolvers = require('./resolvers/employee');
+const { verifyToken } = require('./utils/auth');
+const typeDefs = require('./typeDefs/User');
+const resolvers = require('./resolvers/User');
 
 dotenv.config();
 connectDB();
@@ -14,8 +15,17 @@ const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: ({ req }) => {
-        //authentication logic
-        return { req };
+        const token = req.headers.authorization || '';
+        try {
+            if (token) {
+                const user = verifyToken(token.replace('Bearer ', '')); 
+                console.log(user);
+                return { user };
+            }
+        } catch (error) {
+            console.error('Error verifying token:', error.message);
+        }
+        return {}; 
     },
 });
 
@@ -23,8 +33,9 @@ async function startServer() {
     await server.start();
     server.applyMiddleware({ app });
 
-    app.listen(process.env.PORT || 4000, () => {
-        console.log(`Server running at http://localhost:4000${server.graphqlPath}`);
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () => {
+        console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
     });
 }
 
