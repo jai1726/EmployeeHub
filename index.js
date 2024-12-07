@@ -16,6 +16,7 @@ const server = new ApolloServer({
     resolvers,
     context: ({ req }) => {
         const token = req.headers.authorization || '';
+        console.log(token);
         try {
             if (token) {
                 const user = verifyToken(token.replace('Bearer ', '')); 
